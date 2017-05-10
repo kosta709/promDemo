@@ -15,7 +15,7 @@ prometheus + alertmanager, cadvisor, consul, consul-exporter, grafana
 ```bash
 
 cd /vagrant
-docker-compose up -f docker-compose-server.yml
+docker-compose up -f docker-compose-node.yml
 ```
 
 http://172.29.1.100:9090 - Prometheus
