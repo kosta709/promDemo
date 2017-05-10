@@ -10,17 +10,23 @@ prometheus + alertmanager, cadvisor, consul, consul-exporter, grafana
 
 
 ##### Start Prometheus Server 
-```bash
+
+```
+bash
 ssh -p 10022 vagrant@172.29.1.100
 
 cd /vagrant
 docker-compose up -f docker-compose-node.yml
 ```
-
+  
 http://172.29.1.100:9090 - Prometheus
+
 http://172.29.1.100:9093 - Alertmanager
+
 http://172.29.1.100:3000 - Grafana (admin:cf12345)
+
 http://172.29.1.100:720 - Cadvisor
+
 http://172.29.1.100:8500 - Consul Server
 
 
