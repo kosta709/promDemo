@@ -1,0 +1,13 @@
+{
+  "service": {
+    "name": "docker-node",
+    "tags": ["tikal-demo-node"],
+    "port": 2376,
+    "checks": [
+      {
+        "script": "ls -l /checks/${HOSTNAME}-healthy > /dev/null && echo 'Dummy check - SUCCESS'",
+        "interval": "10s"
+      }
+    ]    
+  }
+}

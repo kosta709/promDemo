@@ -1,0 +1,91 @@
+version: '2'
+services:
+    registrator:
+        image: 'gliderlabs/registrator:v7'
+        labels:
+            - internal=true
+        volumes:
+            - '/var/run/docker.sock:/tmp/docker.sock'
+        network_mode: host
+        command: '-resync 20 -ip 172.29.1.100 -deregister on-success -retry-attempts -1 -retry-interval 5000 consul://localhost:8500'
+        
+    consul:
+      image: consul
+      labels:
+        - "internal=true"    
+      ports:
+        - "8500:8500"
+        - "8300-8302:8300-8302"
+        - "8400:8400"
+        - "8600:8600/udp"
+      network_mode: host
+      volumes:
+          - '/vagrant/etc/consul/server.json:/config/server.json:ro'
+          - '/vagrant/etc/consul/node.json:/config/node.json:ro'
+          - '/var/lib/consul:/data:rw'
+          - '/vagrant/checks/:/checks/:rw'
+      command: "agent -config-dir /config -advertise=172.29.1.100 -client=172.29.1.100"
+      # command: "agent -config-dir /config "
+      
+    cadvisor:
+      image: google/cadvisor
+      labels:
+          - internal=true
+      volumes:
+          - '/:/rootfs:ro'
+          - '/var/run:/var/run:rw'
+          - '/sys:/sys:ro'
+          - '/var/lib/docker/:/var/lib/docker:ro'
+
+      environment:
+          SERVICE_720_CHECK_TCP: 'True'
+          SERVICE_720_CHECK_INTERVAL: 15s
+      ports:
+          - '720:8080'
+                  
+    consul-exporter:
+      image: prom/consul-exporter
+      labels:
+        - "internal=true"
+      ports:
+          - '9107:9107'
+      command: -consul.server=172.29.1.100:8500
+      environment:
+          SERVICE_IGNORE: 'True'
+
+    prometheus:
+      image: 'prom/prometheus:v1.6.1'
+      labels:
+          - "internal=true"
+      volumes:
+          - '/var/lib/prometheus:/prometheus:rw'
+          - '/vagrant/etc/prometheus:/etc/prometheus:rw'
+      # network_mode: host
+      ports:
+          - '9090:9090'
+      extra_hosts:
+          - 'consul:172.29.1.100'
+      command: ' -query.staleness-delta=11s -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -alertmanager.url=http://alertmanager:9093 -web.external-url=http://172.29.1.100:9090/'
+
+
+    # not mandatory
+    alertmanager:
+        image: 'prom/alertmanager'
+        labels:
+            - "internal=true"
+        volumes:
+            - '/var/lib/alertmanager:/alertmanager:rw'
+            - '/vagrant/etc/alertmanager:/etc/alertmanager:ro'
+        ports:
+            - '9093:9093'
+
+    grafana:
+        image: 'grafana/grafana'
+        labels:
+            - io.codefresh.owner=codefresh
+        volumes:
+            - '/var/lib/grafana:/var/lib/grafana'
+        environment:
+            GF_SECURITY_ADMIN_PASSWORD: a12345
+        ports:
+            - '3000:3000'

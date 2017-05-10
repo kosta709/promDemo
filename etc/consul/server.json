@@ -1,0 +1,9 @@
+{
+  "data_dir": "/data",
+  "log_level": "INFO",
+  "ui": true,
+  "server": true,
+  "bootstrap_expect": 1,
+  "disable_remote_exec": true,
+  "disable_update_check": true
+}

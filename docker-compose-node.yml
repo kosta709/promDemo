@@ -1,0 +1,45 @@
+version: '2'
+services:
+    registrator:
+        image: 'gliderlabs/registrator:v7'
+        labels:
+            - internal=true
+        volumes:
+            - '/var/run/docker.sock:/tmp/docker.sock'
+        network_mode: host
+        command: '-resync 20 -ip 172.29.1.101 -deregister on-success -retry-attempts -1 -retry-interval 5000 consul://localhost:8500'
+    consul:
+      image: consul
+      hostname: ${HOSTNAME}
+      labels:
+        - "internal=true"    
+      ports:
+        - "8500:8500"
+        - "8300-8302:8300-8302"
+        - "8400:8400"
+        - "8600:8600/udp"
+      network_mode: host  
+      volumes:
+          - '/vagrant/etc/consul/agent.json:/config/agent.json:ro'
+          - '/vagrant/etc/consul/node.json:/config/node.json:ro'
+          - '/var/lib/consul:/data:rw'
+          - '/vagrant/checks/:/checks/:rw'
+      command: "agent -config-dir /config -advertise=172.29.1.101"
+      environment:
+          SERVICE_IGNORE: 'True'
+          
+    cadvisor:
+        image: google/cadvisor
+        labels:
+            - internal=true
+        volumes:
+            - '/:/rootfs:ro'
+            - '/var/run:/var/run:rw'
+            - '/sys:/sys:ro'
+            - '/var/lib/docker/:/var/lib/docker:ro'
+
+        environment:
+            SERVICE_720_CHECK_TCP: 'True'
+            SERVICE_720_CHECK_INTERVAL: 15s
+        ports:
+            - '720:8080'

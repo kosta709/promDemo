@@ -1,0 +1,8 @@
+{
+  "data_dir": "/data",
+  "log_level": "INFO",
+  "server": false,
+  "disable_remote_exec": true,
+  "disable_update_check": true,
+  "retry_join": ["172.29.1.100"]
+}

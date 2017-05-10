@@ -1,0 +1,51 @@
+# Alert for any instance that is unreachable
+ALERT InstanceAgentDown
+  IF up == 0
+  FOR 3m
+  LABELS { alertgroup = "downtime", severity = "warning" }
+  ANNOTATIONS {
+    summary = "Instance Agent is down",
+    description = "{{ $labels.node_role }} {{ $labels.node }} (agent {{ $labels.instance }}) is down. Runtime Env = {{ $labels.runtime_env }}"
+  }
+
+# All builder /runner nodes for environemnt is down
+ALERT RuntimeEnvDown
+  IF (10 * up{job = "node"} + on (node) group_left() consul_catalog_service_node_healthy{service = "docker-node"}) < 11 
+      unless on(runtime_env, node_role) (up{job = "node"} * on (node) group_left() consul_catalog_service_node_healthy{service = "docker-node"}) == 1
+  FOR 3m
+  LABELS { alertgroup = "downtime", severity = "critical" }
+  ANNOTATIONS {
+    summary = "All nodes for runtime_env {{ $labels.runtime_env }} is down ",
+    description = "{{ $labels.node_role }} {{ $labels.node }} (agent {{ $labels.instance }}) is down: {{ $value }} "
+  }
+
+  
+# Consul Service is down (no docker node)
+ALERT ServiceDown
+  IF count by (node, service)(consul_catalog_service_node_healthy{service != "docker-node"} == 0)
+  FOR 3m
+  LABELS { alertgroup = "downtime", severity = "critical" }
+  ANNOTATIONS {
+    summary = "{{ $labels.service }} is down",
+    description = "Service {{ $labels.service }} on node {{ $labels.node}} is down"
+  }
+  
+# Consul Docker Node Service is down (docker ps not works)
+ALERT DockerNodeDown
+  IF count by (node, service)(consul_catalog_service_node_healthy{service = "docker-node"} == 0)
+  FOR 3m
+  LABELS { alertgroup = "downtime", severity = "warning" }
+  ANNOTATIONS {
+    summary = "{{ $labels.service }} is down",
+    description = "Docker node {{ $labels.node}} is down"
+  }  
+  
+# Reminder
+ALERT ReminderCritical
+  IF label_replace(ALERTS{alertname!="ReminderCritical",alertstate="firing",severity="critical"}, "alert", "$1", "alertname", "(.*)") == 1
+  FOR 1h
+  LABELS { alertgroup = "reminder", severity = "critical" }
+  ANNOTATIONS {
+    summary = "Reminder: there are critical alerts!",
+    description = "{{ $labels.alert}} for {{ $labels.node}} - {{ $labels.service }}"
+  }
