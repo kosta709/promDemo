@@ -16,7 +16,7 @@ bash
 ssh -p 10022 vagrant@172.29.1.100
 
 cd /vagrant
-docker-compose up -f docker-compose-node.yml
+docker-compose -f docker-compose-server.yml up
 ```
   
 http://172.29.1.100:9090 - Prometheus
@@ -34,10 +34,18 @@ http://172.29.1.100:8500 - Consul Server
 ```bash
 ssh -p 10122 vagrant@172.29.1.101
 cd /vagrant
-docker-compose up -f docker-compose-server.yml
+docker-compose -f docker-compose-node.yml up
 ```
 
 http://172.29.1.101:720 - Cadvisor on node1
+
+
+##### Alerts Tests
+
+- rename files in checks - will cause to DockerNodeDown alert
+
+- on node launch `docker run -it progrium/stress stress --cpu 128 --io 4 --vm 2 --vm-bytes 128M --timeout 600s`
+
 
 
 

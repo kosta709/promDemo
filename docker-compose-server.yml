@@ -7,7 +7,7 @@ services:
         volumes:
             - '/var/run/docker.sock:/tmp/docker.sock'
         network_mode: host
-        command: '-resync 20 -ip 172.29.1.100 -deregister on-success -retry-attempts -1 -retry-interval 5000 consul://localhost:8500'
+        command: '-resync 20 -ip 172.29.1.100 -deregister on-success -retry-attempts -1 -retry-interval 5000 consul://172.29.1.100:8500'
         
     consul:
       image: consul
@@ -25,6 +25,8 @@ services:
           - '/var/lib/consul:/data:rw'
           - '/vagrant/checks/:/checks/:rw'
       command: "agent -config-dir /config -advertise=172.29.1.100 -client=172.29.1.100"
+      environment:
+          SERVICE_IGNORE: 'True'      
       # command: "agent -config-dir /config "
       
     cadvisor:
@@ -51,7 +53,8 @@ services:
           - '9107:9107'
       command: -consul.server=172.29.1.100:8500
       environment:
-          SERVICE_IGNORE: 'True'
+          SERVICE_9107_CHECK_TCP: 'True'
+          SERVICE_9107_CHECK_INTERVAL: 15s
 
     prometheus:
       image: 'prom/prometheus:v1.6.1'
@@ -66,26 +69,34 @@ services:
       extra_hosts:
           - 'consul:172.29.1.100'
       command: ' -query.staleness-delta=11s -config.file=/etc/prometheus/prometheus.yml -storage.local.path=/prometheus -alertmanager.url=http://alertmanager:9093 -web.external-url=http://172.29.1.100:9090/'
-
+      environment:
+          SERVICE_9090_CHECK_TCP: 'True'
+          SERVICE_9090_CHECK_INTERVAL: 15s
 
     # not mandatory
     alertmanager:
-        image: 'prom/alertmanager'
-        labels:
-            - "internal=true"
-        volumes:
-            - '/var/lib/alertmanager:/alertmanager:rw'
-            - '/vagrant/etc/alertmanager:/etc/alertmanager:ro'
-        ports:
-            - '9093:9093'
+      image: 'prom/alertmanager'
+      labels:
+          - "internal=true"
+      volumes:
+          - '/var/lib/alertmanager:/alertmanager:rw'
+          - '/vagrant/etc/alertmanager:/etc/alertmanager:ro'
+      ports:
+          - '9093:9093'
+      environment:
+          SERVICE_9093_CHECK_TCP: 'True'
+          SERVICE_9093_CHECK_INTERVAL: 15s
 
     grafana:
-        image: 'grafana/grafana'
-        labels:
-            - io.codefresh.owner=codefresh
-        volumes:
-            - '/var/lib/grafana:/var/lib/grafana'
-        environment:
-            GF_SECURITY_ADMIN_PASSWORD: a12345
-        ports:
-            - '3000:3000'
+      image: 'grafana/grafana'
+      labels:
+          - io.codefresh.owner=codefresh
+      volumes:
+          - '/var/lib/grafana:/var/lib/grafana'
+      environment:
+          GF_SECURITY_ADMIN_PASSWORD: a12345
+      ports:
+          - '3000:3000'
+      environment:
+          SERVICE_3000_CHECK_TCP: 'True'
+          SERVICE_3000_CHECK_INTERVAL: 15s            
