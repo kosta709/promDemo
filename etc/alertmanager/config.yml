@@ -9,7 +9,7 @@ receivers:
 - name: 'cf-slack'
   slack_configs:
     - send_resolved: true
-      api_url: 'https://hooks.slack.com/services/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'
+      api_url: 'https://hooks.slack.com/services/aaaaa/bbbbb/ccccc'
       title: '[{{ .Status  | toUpper }}] - {{ .CommonAnnotations.summary }}'
       text: '{{ .CommonAnnotations.description }}' 
       title_link: 'http://172.29.1.100:9090/alerts'

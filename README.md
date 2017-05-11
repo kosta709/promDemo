@@ -50,6 +50,3 @@ http://172.29.1.101:720 - Cadvisor on node1
 
 - on node launch `docker run -it progrium/stress stress --cpu 128 --io 4 --vm 2 --vm-bytes 128M --timeout 600s`
 
-
-
-
