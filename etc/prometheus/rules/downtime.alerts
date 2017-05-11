@@ -23,7 +23,7 @@ ALERT RuntimeEnvDown
 # Consul Service is down (no docker node)
 ALERT ServiceDown
   IF count by (node, service_name)(consul_catalog_service_node_healthy{service_name != "docker-node"} == 0)
-  FOR 3m
+  FOR 1m
   LABELS { alertgroup = "downtime", severity = "critical" }
   ANNOTATIONS {
     summary = "{{ $labels.service_name }} is down",

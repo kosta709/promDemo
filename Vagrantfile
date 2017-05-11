@@ -18,9 +18,7 @@ Vagrant.configure(2) do |config|
 
   config.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", disabled: true
   $script = <<SCRIPT
-    curl -sSL https://get.docker.com/ | sh
-    service docker start
-    usermod -aG docker vagrant
+    sudo /vagrant/install.sh
 SCRIPT
 
   config.vm.define "srv1" do |tst1|
