@@ -1,6 +1,6 @@
 global:
   scrape_interval:     10s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
-  evaluation_interval: 1m # The default is every 1 minute.
+  evaluation_interval: 20s # The default is every 1 minute.
   # scrape_timeout is set to the global default (10s).
 
   # Attach these labels to any time series or alerts when communicating with
@@ -22,14 +22,14 @@ scrape_configs:
     - targets: ['localhost:9090']
 
   - job_name: 'node'
-    static_configs:
-      - targets: ['cadvisor:8080']
-        labels: ['node:local', 'node_role:demo']
-
+    file_sd_configs:
+      - files: ['/etc/prometheus/static_hosts.json']
+        refresh_interval: 1m
     relabel_configs:
-    
       # Set node name lable
-      - source_labels: [__meta_consul_node]
+      - source_labels: [__address__]
+        regex: '(.*):.*'
+        replacement: $1
         target_label:  node
 
     metric_relabel_configs:
@@ -40,8 +40,8 @@ scrape_configs:
            |container_start_time_seconds|
            |container_cpu_(user|system|usage)_seconds_total|
            |container_fs_(usage|limit)_bytes|
-           |container_memory_usage_bytes|container_spec_memory_limit_bytes|
-           |container_network_receive_bytes_total
+           |container_memory.*|
+           |container_network.*
         action: keep
               
       - source_labels: [ id ]

@@ -1,6 +1,5 @@
 global:
 
-
 # The directory from which notification templates are read.
 templates: 
 - '/etc/alertmanager/templates/slackAlert.tmpl'

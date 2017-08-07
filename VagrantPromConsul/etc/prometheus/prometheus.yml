@@ -29,7 +29,7 @@ scrape_configs:
     relabel_configs:
       # Set node name lable
       - source_labels: [exported_node]
-        target_label:  node  
+        target_label:  node
   
   - job_name: 'node'
     consul_sd_configs:

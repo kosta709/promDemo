@@ -1,19 +1,19 @@
 
 # Containers Alerts
 ALERT ContainerCPU
-   IF (rate(container_cpu_user_seconds_total{image != ""}[5m]) + rate(container_cpu_system_seconds_total{image != ""}[5m])) * 100  / on (node) group_left() machine_cpu_cores  > 90
-  FOR 15m
+   IF (rate(container_cpu_user_seconds_total{image != ""}[5m]) + rate(container_cpu_system_seconds_total{image != ""}[5m])) * 100  / on (node) group_left() machine_cpu_cores  > 60
+  FOR 1m
   LABELS { alertgroup = "ContainerCPU", severity = "warning" }
   ANNOTATIONS {
     summary = "ContainerCPU Warning",
-    description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} CPU > 90% node {{ $labels.node}}, image = {{ $labels.image }} , account {{ $labels.container_label_io_codefresh_accountName }} , pipeline = {{ $labels.container_label_io_codefresh_pipelineName }}  "
+    description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} CPU > 90% node {{ $labels.node}}, image = {{ $labels.image }} , account {{ $labels.container_label_accountName }} , pipeline = {{ $labels.container_label_pipelineName }}  "
   }
   
 ALERT ContainerStorageExceeded 
-  IF container_fs_usage_bytes{id !="/"} > 10737418240
+  IF container_fs_usage_bytes{id !="/"} > 100000000
   FOR 15m
   LABELS { alertgroup = "ContainerStorageExceeded", severity = "warning" }
   ANNOTATIONS {
     summary = "Container Storage Warning",
-    description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} storage > 10G , image = {{ $labels.image }}, Account {{ $labels.container_label_io_codefresh_accountName }} , pipeline = {{ $labels.container_label_io_codefresh_pipelineName }} "
+    description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} storage > 10G , image = {{ $labels.image }}, Account {{ $labels.container_label_accountName }} , pipeline = {{ $labels.container_label_pipelineName }} "
   }

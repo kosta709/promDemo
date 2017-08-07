@@ -1,0 +1,16 @@
+[
+  {
+    "targets": [ "192.168.99.100:8080"],
+    "labels": {
+      "runtime_env": "first",
+      "node_role": "demo"
+    }
+  },
+  {
+    "targets": [ "172.29.1.101:8080"],
+    "labels": {
+      "runtime_env": "second",
+      "node_role": "demo"
+    }
+  }
+]

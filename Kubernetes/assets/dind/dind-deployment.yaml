@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dind
+  labels:
+    app: dind
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        forceRedeployUniqId: "1"
+        prometheus_scrape: "true"
+        prometheus_port: "9323"
+      labels:
+        app: dind
+    spec:
+      containers:
+      - image: docker:17.05.0-ce-dind
+        name: dind
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 1300
+          protocol: TCP
+        - containerPort: 9323
+          protocol: TCP
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            rm -fv /var/run/docker.pid
+            mkdir /var/run/codefresh
+            dockerd
+        volumeMounts:
+        - mountPath: /etc/docker/daemon.json
+          name: dind-config
+          readOnly: true
+          subPath: daemon.json
+      volumes:
+      - name: dind-config
+        configMap:
+          name: dind-config

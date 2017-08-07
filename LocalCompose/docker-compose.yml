@@ -1,7 +1,7 @@
 version: '2'
 services:
     cadvisor:
-      image: google/cadvisor
+      image: google/cadvisor:v0.26.1
       labels:
           - internal=true
       volumes:
@@ -13,11 +13,11 @@ services:
           - '8080:8080'
 
     prometheus:
-      image: 'prom/prometheus:v1.7.1'
+      image: 'prom/prometheus:v1.6.3'
       labels:
           - "internal=true"
       volumes:
-          - '${PWD}/data/prometheus:/prometheus:rw'
+          - '/mnt/sda1/prometheus/data/prometheus:/prometheus:rw'
           - '${PWD}/etc/prometheus:/etc/prometheus:rw'
       # network_mode: host
       ports:
@@ -36,7 +36,7 @@ services:
           - "internal=true"
       volumes:
           - '${PWD}/data/alertmanager:/alertmanager:rw'
-          - '${PWD}/data/etc/alertmanager:/etc/alertmanager:ro'
+          - '${PWD}/etc/alertmanager:/etc/alertmanager:ro'
       ports:
           - '9093:9093'
 
@@ -45,7 +45,7 @@ services:
       labels:
           - io.codefresh.owner=codefresh
       volumes:
-          - '${PWD}/data/grafana:/var/lib/grafana'
+          - '/mnt/sda1/prometheus/data/grafana:/var/lib/grafana'
       environment:
           GF_SECURITY_ADMIN_PASSWORD: a12345
       ports:
