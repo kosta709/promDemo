@@ -1,0 +1,17 @@
+apiVersion: kops/v1alpha2
+kind: InstanceGroup
+metadata:
+  labels:
+    kops.k8s.io/cluster: prom-demo.cf-cd.com
+  name: nodes
+spec:
+  cloudLabels:
+    nodeType: dind
+    runtimeEnvironment: codefresh
+  image: kope.io/k8s-1.6-debian-jessie-amd64-hvm-ebs-2017-05-02
+  machineType: m4.large
+  maxSize: 4
+  minSize: 2
+  role: Node
+  subnets:
+  - us-east-2a

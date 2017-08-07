@@ -1,0 +1,50 @@
+
+### Docker Networks 
+ALERT TooManyDockerNetworksWarning
+  IF count by (node, runtime_env, instance) (container_network_receive_bytes_total{id = "/",  interface =~ "br-.*" }) >= 25
+       unless on (instance) ALERTS{alertname="TooManyDockerNetworksCritical", alertstate="firing"}
+  FOR 5m
+  LABELS { alertgroup = "TooManyDockerNetworks", severity = 'warning' }
+  ANNOTATIONS {
+    summary = "Too many docker networks on {{ $labels.node }}",
+    description = "There are {{ $value }} docker networks on {{ $labels.node_role }} node {{ $labels.node }} , RuntimeEnv = {{ $labels.runtime_env }} , agent {{ $labels.instance }} "
+  }
+  
+ALERT TooManyDockerNetworksCritical
+  IF count by (node, runtime_env, instance) (container_network_receive_bytes_total{id = "/",  interface =~ "br-.*" }) >= 29
+  FOR 3m
+  LABELS { alertgroup = "TooManyDockerNetworks", severity = 'critical' }
+  ANNOTATIONS {
+    summary = "Too many docker networks on {{ $labels.node }}",
+    description = "There are {{ $value }} docker networks on {{ $labels.node_role }} node {{ $labels.node }} , RuntimeEnv = {{ $labels.runtime_env }} , agent {{ $labels.instance }} "
+  }  
+
+# Node Alerts
+ALERT NodeCPU
+  IF (rate(container_cpu_system_seconds_total{id="/", image="" }[5m]) + rate(container_cpu_user_seconds_total{id="/", image="" }[5m])) * 100 /  on (node) group_left() machine_cpu_cores > 90
+  FOR 3m
+  LABELS { alertgroup = "NodeCPU", severity = "warning" }
+  ANNOTATIONS {
+    summary = "Node CPU overloaded",
+    description = "{{ $labels.node_role }} node {{ $labels.node }} CPU > 90%   Runtime Env = {{ $labels.runtime_env }} "
+  }  
+  
+ALERT NodeStorageExceededCritical
+  IF container_fs_usage_bytes{id="/", device="none"}  /  container_fs_limit_bytes{id="/", device="none"} * 100 > 95
+  FOR 15m
+  LABELS { alertgroup = "NodeStorageExceeded", severity = 'critical' }
+  ANNOTATIONS {
+    summary = "Node Storage Exceeded",
+    description = "{{ $labels.node_role }} node {{ $labels.node }} disk usage percent {{ $value }}%   Runtime Env = {{ $labels.runtime_env }} "
+  }  
+
+ALERT NodeStorageExceededWarning
+  IF container_fs_usage_bytes{id="/", device="none"}  /  container_fs_limit_bytes{id="/", device="none"} * 100 > 80
+  FOR 15m
+  LABELS { alertgroup = "NodeStorageExceeded", severity = 'warning' }
+  ANNOTATIONS {
+    summary = "Node Storage Exceeded",
+    description = "{{ $labels.node_role }} node {{ $labels.node }} disk usage percent {{ $value }}%   Runtime Env = {{ $labels.runtime_env }} "
+  } 
+
+

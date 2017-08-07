@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+data:
+  downtime.alerts: |
+    # Alert for any instance that is unreachable
+    ALERT InstanceAgentDown
+      IF up == 0
+      FOR 1m
+      LABELS { alertgroup = "downtime", severity = "warning" }
+      ANNOTATIONS {
+        summary = "Instance Agent is down",
+        description = "{{ $labels.node_role }} {{ $labels.node }} (agent {{ $labels.instance }}) is down. Runtime Env = {{ $labels.runtime_env }}"
+      }
+
+    # Reminder
+    ALERT ReminderCritical
+      IF label_replace(ALERTS{alertname!="ReminderCritical",alertstate="firing",severity="critical"}, "alert", "$1", "alertname", "(.*)") == 1
+      FOR 1h
+      LABELS { alertgroup = "reminder", severity = "critical" }
+      ANNOTATIONS {
+        summary = "Reminder: there are critical alerts!",
+        description = "{{ $labels.alert}} for {{ $labels.node}} - {{ $labels.service_name }}"
+      }
+
+  node.alerts: |
+    ### Docker Networks 
+
+    ALERT NodeCPU
+      IF (rate(container_cpu_system_seconds_total{id="/", image="" }[5m]) + rate(container_cpu_user_seconds_total{id="/", image="" }[5m])) * 100 /  on (node) group_left() machine_cpu_cores > 90
+      FOR 15m
+      LABELS { alertgroup = "NodeCPU", severity = "warning" }
+      ANNOTATIONS {
+        summary = "Node CPU overloaded",
+        description = "{{ $labels.node_role }} node {{ $labels.node }} CPU > 90%   Runtime Env = {{ $labels.runtime_env }} "
+      }  
+
+    ALERT NodeMemoryLow
+      IF container_memory_usage_bytes{id = "/", image="", job =~".*node.*"} * 100 / on (node, runtime_env) container_spec_memory_limit_bytes{id = "/", job =~".*node.*" } > 90
+      FOR 15m
+      LABELS { alertgroup = "NodeMemoryLow", severity = "warning" }
+      ANNOTATIONS {
+        summary = "Node Memory Low",
+        description = "{{ $labels.node_role }} node {{ $labels.node }} memory usage > 90%   Runtime Env = {{ $labels.runtime_env }} "
+      }
+
+    ALERT NodeStorageExceededCritical
+      IF container_fs_usage_bytes{id="/", device=~"none|overlay"}  / on(instance,node,node_role,runtime_env) container_fs_limit_bytes{id="/", device=~"none|overlay"} * 100 > 95
+      FOR 15m
+      LABELS { alertgroup = "NodeStorageExceeded", severity = 'critical' }
+      ANNOTATIONS {
+        summary = "Node Storage Exceeded",
+        description = "{{ $labels.node_role }} node {{ $labels.node }} disk usage more then 95%   Runtime Env = {{ $labels.runtime_env }} "
+      }  
+    
+    ALERT NodeStorageExceededWarning
+      IF container_fs_usage_bytes{id="/", device=~"none|overlay"}  / on(instance,node,node_role,runtime_env) container_fs_limit_bytes{id="/", device=~"none|overlay"} * 100 > 80
+      FOR 15m
+      LABELS { alertgroup = "NodeStorageExceeded", severity = 'warning' }
+      ANNOTATIONS {
+        summary = "Node Storage Exceeded",
+        description = "{{ $labels.node_role }} node {{ $labels.node }} disk usage more then 80%   Runtime Env = {{ $labels.runtime_env }} "
+      }
+    
+  container.alerts: |
+    # Containers Alerts
+    ALERT ContainerCPU
+      IF (rate(container_cpu_user_seconds_total{image != ""}[5m]) + rate(container_cpu_system_seconds_total{image != ""}[5m])) * 100  / on (node) group_left() machine_cpu_cores  > 90
+      FOR 15m
+      LABELS { alertgroup = "ContainerCPU", severity = "warning" }
+      ANNOTATIONS {
+        summary = "ContainerCPU Warning",
+        description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} CPU > 90% node {{ $labels.node}}, image = {{ $labels.image }} , account {{ $labels.container_label_io_codefresh_accountName }} , pipeline = {{ $labels.container_label_io_codefresh_pipelineName }}  "
+      }
+      
+    ALERT ContainerStorageExceeded 
+      IF container_fs_usage_bytes{id !="/"} > 10737418240
+      FOR 15m
+      LABELS { alertgroup = "ContainerStorageExceeded", severity = "warning" }
+      ANNOTATIONS {
+        summary = "Container Storage Warning",
+        description = "{{ $labels.node_role}} {{ $labels.node}}: Container {{ $labels.name }} storage > 10G , image = {{ $labels.image }}, Account {{ $labels.container_label_io_codefresh_accountName }} , pipeline = {{ $labels.container_label_io_codefresh_pipelineName }} "
+      }
+    
+  system.alerts: |
+    ALERT PrometheusMemoryWarning
+      IF process_resident_memory_bytes{job = 'prometheus'} > 9000000000
+      FOR 15m
+      LABELS { alertgroup = "PrometheusSystem", severity = "warning" }
+      ANNOTATIONS {
+        summary = "Prometheus memory warning",
+        description = "prometheus: process_resident_memory_bytes = {{ $value }}"
+      }
+      

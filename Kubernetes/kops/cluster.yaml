@@ -1,0 +1,52 @@
+apiVersion: kops/v1alpha2
+kind: Cluster
+metadata:
+  name: prom-demo.cf-cd.com
+spec:
+  clusterDNSDomain: cluster.local
+  additionalPolicies:
+    node: |
+      [
+        {
+          "Effect": "Allow",
+          "Action": ["sts:AssumeRole"],
+          "Resource": ["*"]
+        }
+      ]
+  api:
+    dns: {}
+  authorization:
+    rbac: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://cf-kops-shared-state/prom-demo.cf-cd.com
+  etcdClusters:
+  - etcdMembers:
+    - instanceGroup: master-us-east-2a
+      name: a
+    name: main
+  - etcdMembers:
+    - instanceGroup: master-us-east-2a
+      name: a
+    name: events
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  kubernetesVersion: 1.6.7
+  masterInternalName: api.internal.prom-demo.cf-cd.com
+  masterPublicName: api.prom-demo.cf-cd.com
+  networkCIDR: 172.20.0.0/16
+  networking:
+    weave: {}
+  nonMasqueradeCIDR: 10.50.0.0/16
+  sshAccess:
+  - 0.0.0.0/0
+  subnets:
+  - cidr: 172.20.32.0/19
+    name: us-east-2a
+    type: Public
+    zone: us-east-2a
+  topology:
+    dns:
+      type: Public
+    masters: public
+    nodes: public

@@ -1,0 +1,62 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: prometheus
+  name: prometheus
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+      annotations:
+        forceRedeployUniqId: "2"
+    spec:
+      serviceAccountName: prometheus
+      terminationGracePeriodSeconds: 900
+      containers:
+      - image: prom/prometheus:v1.7.1
+        name: prometheus
+        command:
+        - "/bin/prometheus"
+        args:
+        - "-config.file=/etc/prometheus/prometheus.yml"
+        - "-storage.local.path=/prometheus"
+        - "-storage.local.retention=48h"
+        - "-query.staleness-delta=15s"
+        - "-alertmanager.url=http://alertmanager:9093"
+        
+        ports:
+        - containerPort: 9090
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/prometheus"
+          name: prom-data
+        - mountPath: "/etc/prometheus"
+          name: prom-config
+        - mountPath: "/etc/prom-rules"
+          name: prom-rules          
+          #        resources:
+          #          requests:
+          #            cpu: 1000m
+          #            memory: 3000Mi
+          #~ limits:
+            #~ cpu: 500m
+            #~ memory: 2500Mi
+      volumes:
+      - name: prom-data
+        persistentVolumeClaim:
+          claimName: prometheus-volume-claim        
+        #~ gcePersistentDisk:
+          #~ pdName: prometheus-data-kube
+          #~ fsType: ext4 
+
+      - name: prom-config
+        configMap:
+          name: prometheus-config
+        
+      - name: prom-rules
+        configMap:
+          name: prometheus-rules

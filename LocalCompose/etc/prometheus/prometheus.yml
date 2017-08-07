@@ -1,0 +1,53 @@
+global:
+  scrape_interval:     10s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 1m # The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  #~ external_labels:
+      #~ environment: 'prometheus'
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "/etc/prometheus/rules/*.alerts"
+  - "/etc/prometheus/rules/*.rules"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  - job_name: 'node'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels: ['node:local', 'node_role:demo']
+
+    relabel_configs:
+    
+      # Set node name lable
+      - source_labels: [__meta_consul_node]
+        target_label:  node
+
+    metric_relabel_configs:
+      #Drop unused metrics
+      - source_labels: [ __name__ ]
+        regex: >- 
+          up|ALERTS|scrape.*|http.*|machine_cpu_cores|cadvisor.*|
+           |container_start_time_seconds|
+           |container_cpu_(user|system|usage)_seconds_total|
+           |container_fs_(usage|limit)_bytes|
+           |container_memory_usage_bytes|container_spec_memory_limit_bytes|
+           |container_network_receive_bytes_total
+        action: keep
+              
+      - source_labels: [ id ]
+        regex: '/(system|user).slice.*'
+        action: drop
+      
+      #~ - source_labels: [ __name__ ]
+        #~ regex: '(go_.*)'
+        #~ action: drop      

@@ -1,0 +1,3 @@
+{{ define "slack.cf.title" }}{{ .GroupLabels.alertname }} - {{ .Status }}{{ end }}
+
+{{ define "slack.cf.text" }}{{ template "__text_alert_list" . }}{{ end }}

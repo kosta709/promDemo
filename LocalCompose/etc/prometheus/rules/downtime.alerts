@@ -1,0 +1,19 @@
+# Alert for any instance that is unreachable
+ALERT InstanceAgentDown
+  IF up == 0
+  FOR 3m
+  LABELS { alertgroup = "downtime", severity = "warning" }
+  ANNOTATIONS {
+    summary = "Instance Agent is down",
+    description = "{{ $labels.node_role }} {{ $labels.node }} (agent {{ $labels.instance }}) is down. Runtime Env = {{ $labels.runtime_env }}"
+  }
+  
+# Reminder
+ALERT ReminderCritical
+  IF label_replace(ALERTS{alertname!="ReminderCritical",alertstate="firing",severity="critical"}, "alert", "$1", "alertname", "(.*)") == 1
+  FOR 1h
+  LABELS { alertgroup = "reminder", severity = "critical" }
+  ANNOTATIONS {
+    summary = "Reminder: there are critical alerts!",
+    description = "{{ $labels.alert}} for {{ $labels.node}} - {{ $labels.service_name }}"
+  }
